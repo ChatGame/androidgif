@@ -1,0 +1,13 @@
+sh/
+
+# Mac .DS_store
+.DS_Store
+
+.svn/
+
+# android gen folders
+bin/
+gen/
+
+# android annotation gen folder
+.apt_generated

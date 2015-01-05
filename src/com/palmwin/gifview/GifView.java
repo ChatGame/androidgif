@@ -6,22 +6,27 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 public class GifView extends View {
 
+	private static final String TAG="GIFVIEW";
 	private Bitmap bitmap;
 	private int showWidth = -1;
 	private int showHeight = -1;
 	private Rect rect = null;
 	private GifItem gifItem = null;
 	private Handler handler = new Handler();
-
+	
 	public GifView(Context context) {
 		super(context);
 	}
 
 	public void setGif(String imgPath, String gifName, int width, int height) {
+		if (gifItem != null) {
+			gifItem.removeView(this);
+		}
 		this.showHeight = height;
 		this.showWidth = width;
 		gifItem = GifItem.getGifItem(gifName, imgPath);
@@ -72,6 +77,7 @@ public class GifView extends View {
 	protected void onAttachedToWindow() {
 		super.onAttachedToWindow();
 		gifItem.addView(this);
+
 	}
 
 	@Override

@@ -13,14 +13,23 @@ public class GifItem {
 	private GifView[] listViewsBuffer = null;
 
 	public static GifItem getGifItem(String gifName, String imgPath) {
-		GifItem item = gifItemHashtable.get(gifName);
+		//TODO 同步陷阱
+		GifItem item = gifItemHashtable.get(gifName);;
 		if (item != null) {
 			return item;
 		} else {
-			item = new GifItem(gifName, imgPath);
-			gifItemHashtable.put(gifName, item);
-			GifThread.getGifThread().addGifItem(item);
-			return item;
+			synchronized (gifItemHashtable) {
+				item=gifItemHashtable.get(gifName);;
+				if(item==null){
+					item = new GifItem(gifName, imgPath);
+					gifItemHashtable.put(gifName, item);
+					return item;
+				}else
+				{
+					return item;
+				}
+			}
+			
 		}
 
 	}
@@ -49,6 +58,7 @@ public class GifItem {
 			listViewsBuffer = listViews.values().toArray(new GifView[0]);
 		}
 		if (lastFramePlay == 0) {
+			changed=true;
 			lastFramePlay = System.currentTimeMillis();
 		} else {
 			if (System.currentTimeMillis() - lastFramePlay > gifDecoder
