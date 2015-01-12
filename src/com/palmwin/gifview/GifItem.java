@@ -3,7 +3,10 @@ package com.palmwin.gifview;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Hashtable;
+
+import android.util.Log;
 
 public class GifItem {
 	private static Hashtable<String, GifItem> gifItemHashtable = new Hashtable<String, GifItem>();
@@ -12,6 +15,7 @@ public class GifItem {
 	private Hashtable<Integer, GifView> listViews = new Hashtable<Integer, GifView>();
 	private GifView[] listViewsBuffer = null;
 
+	private static final String TAG="GIF";
 	public static GifItem getGifItem(String gifName, String imgPath) {
 		//TODO 同步陷阱
 		GifItem item = gifItemHashtable.get(gifName);;
@@ -33,13 +37,43 @@ public class GifItem {
 		}
 
 	}
+	public static GifItem getGifItem(String gifName, InputStream inputStream) {
+		//TODO 同步陷阱
+		GifItem item = gifItemHashtable.get(gifName);;
+		if (item != null) {
+			return item;
+		} else {
+			synchronized (gifItemHashtable) {
+				item=gifItemHashtable.get(gifName);;
+				if(item==null){
+					item = new GifItem(gifName, inputStream);
+					gifItemHashtable.put(gifName, item);
+					return item;
+				}else
+				{
+					return item;
+				}
+			}
+			
+		}
 
+	}
 	public GifItem(String gifName, String imgPath) {
 		this.gifName = gifName;
 		try {
 			gifDecoder = new GifDecoder(new FileInputStream(new File(imgPath,
 					gifName + ".gif")), gifName);
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	public GifItem(String gifName, InputStream inputStream) {
+		Log.d(TAG,"start decode "+gifName);
+		this.gifName = gifName;
+		try {
+			gifDecoder = new GifDecoder(inputStream, gifName);
+			Log.d(TAG,"gif decode over");
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

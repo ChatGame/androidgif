@@ -1,5 +1,7 @@
 package com.palmwin.gifview;
 
+import java.io.InputStream;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -11,14 +13,13 @@ import android.view.View;
 
 public class GifView extends View {
 
-	private static final String TAG="GIFVIEW";
+	private static final String TAG="GIF";
 	private Bitmap bitmap;
 	private int showWidth = -1;
 	private int showHeight = -1;
 	private Rect rect = null;
 	private GifItem gifItem = null;
 	private Handler handler = new Handler();
-	
 	public GifView(Context context) {
 		super(context);
 	}
@@ -33,7 +34,16 @@ public class GifView extends View {
 		gifItem.addView(this);
 		rect = new Rect(0, 0, width, height);
 	}
-
+	public void setGif(InputStream inputStream, String gifName, int width, int height) {
+		if (gifItem != null) {
+			gifItem.removeView(this);
+		}
+		this.showHeight = height;
+		this.showWidth = width;
+		gifItem = GifItem.getGifItem(gifName, inputStream);
+		gifItem.addView(this);
+		rect = new Rect(0, 0, width, height);
+	}
 	public GifView(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}

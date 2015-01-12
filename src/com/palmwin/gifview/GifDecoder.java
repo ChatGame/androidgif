@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Hashtable;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 public class GifDecoder extends Thread {
 
@@ -39,8 +40,8 @@ public class GifDecoder extends Thread {
 	private int lrw;
 	private int lrh;
 	private Bitmap image;
-	private Bitmap tempImage;
-	private Bitmap lastImage;
+	private int[] colors;
+	private int[] lastColors;
 	private GifFrame currentFrame = null;
 
 	private boolean isShow = false;
@@ -69,7 +70,8 @@ public class GifDecoder extends Thread {
 	private byte[] gifData = null;
 
 	public boolean decodingFlag = false;
-
+	private static final String TAG = "GIF";
+	
 	public GifDecoder(String gifName) {
 		this.gifName = gifName;
 	}
@@ -82,12 +84,16 @@ public class GifDecoder extends Thread {
 	}
 
 	public void run() {
+		Log.d(TAG, "Gif decode start");
 		if (this.in != null)
 			readStream();
 		else if (this.gifData != null) {
 			readByte();
 		}
 		this.decodingFlag = false;
+		buffer=null;
+		Log.d(TAG, "Gif decode2 over " + gifName + "," + this.frameCount
+				+ " frames");
 	}
 
 	public void free() {
@@ -146,7 +152,7 @@ public class GifDecoder extends Thread {
 		this.frameCount = frameCount;
 	}
 
-	public Bitmap getImage() {
+	public int[] getImage() {
 		return getFrameImage(0);
 	}
 
@@ -154,35 +160,50 @@ public class GifDecoder extends Thread {
 		return this.loopCount;
 	}
 
+	int[] line = null;
+	int lastColor = 0;
+	int[][] buffer=null;
+	int curPos=0;
 	private void setPixels() {
-		int[] dest = new int[this.width * this.height];
-
+		if(buffer==null || curPos==buffer.length-1){
+			buffer=new int[10][this.width * this.height];
+			curPos=0;
+		}
+		int[] dest = buffer[curPos];
+		curPos++;
 		if (this.lastDispose > 0) {
 			if (this.lastDispose == 3) {
 				int n = this.frameCount - 2;
 				if (n > 0)
-					this.lastImage = getFrameImage(n - 1);
+					this.lastColors = getFrameImage(n - 1);
 				else {
-					this.lastImage = null;
+					this.lastColors = null;
 				}
 			}
-			if (this.lastImage != null) {
-				this.lastImage.getPixels(dest, 0, this.width, 0, 0, this.width,
-						this.height);
-
+			if (this.lastColors != null) {
+				System.arraycopy(lastColors, 0, dest, 0, lastColors.length);
 				if (this.lastDispose == 2) {
 					int c = 0;
 					if (!this.transparency) {
 						c = this.lastBgColor;
 					}
+					if (line == null) {
+						line = new int[width];
+						lastColor = 0;
+					}
+					if (c != lastColor) {
+						for (int i = 0; i < width; i++) {
+							line[i] = c;
+						}
+						lastColor = c;
+					}
 					for (int i = 0; i < this.lrh; i++) {
 						int n1 = (this.lry + i) * this.width + this.lrx;
 						int n2 = n1 + this.lrw;
-						for (int k = n1; k < n2; k++) {
-							dest[k] = c;
-						}
+						System.arraycopy(line, 0, dest, n1, n2 - n1);
 					}
 				}
+				
 			}
 
 		}
@@ -231,29 +252,26 @@ public class GifDecoder extends Thread {
 			}
 
 		}
-
-		this.tempImage = Bitmap.createBitmap(dest, this.width, this.height,
-				Bitmap.Config.ARGB_4444);
-
-		this.image = GifBitmapManager.getInstance().matrixBitmap(
-				this.tempImage,
-				 this.width,
-				 this.height, 0);
-
-		GifBitmapManager.getInstance().addBitmap(
-				this.gifName + (this.frameCount - 1), this.image,this.width,
-				 this.height);
+		this.colors = dest;
 	}
 
-	public Bitmap getFrameImage(int n) {
+	public int[] getFrameImage(int n) {
 		GifFrame frame = getFrame(n);
 		if (frame == null) {
 			return null;
 		}
-		return frame.image;
+		return frame.colors;
 	}
 
 	public GifFrame getCurrentFrame() {
+		if (this.currentFrame == null)
+			return null;
+		if (image == null) {
+			image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
+		}
+		image.setPixels(this.currentFrame.colors, 0, width, 0, 0, width, height);
+		currentFrame.image = image;
+
 		return this.currentFrame;
 	}
 
@@ -276,9 +294,6 @@ public class GifDecoder extends Thread {
 	}
 
 	public GifFrame next() {
-		if(decodingFlag){
-			return null;
-		}
 		if (!this.isShow) {
 			this.isShow = true;
 			return this.gifFrame;
@@ -613,20 +628,16 @@ public class GifDecoder extends Thread {
 			return;
 		}
 		this.frameCount += 1;
-
-		this.image = Bitmap.createBitmap(this.width, this.height,
-				Bitmap.Config.ARGB_4444);
-
 		setPixels();
 		if (this.gifFrame == null) {
-			this.gifFrame = new GifFrame(this.image, this.delay);
+			this.gifFrame = new GifFrame(this.colors, this.delay);
 			this.currentFrame = this.gifFrame;
 		} else {
 			GifFrame f = this.gifFrame;
 			while (f.nextFrame != null) {
 				f = f.nextFrame;
 			}
-			f.nextFrame = new GifFrame(this.image, this.delay);
+			f.nextFrame = new GifFrame(this.colors, this.delay);
 		}
 
 		if (this.transparency) {
@@ -668,7 +679,7 @@ public class GifDecoder extends Thread {
 		this.lry = this.iy;
 		this.lrw = this.iw;
 		this.lrh = this.ih;
-		this.lastImage = this.tempImage;
+		this.lastColors = this.colors;
 		this.lastBgColor = this.bgColor;
 		this.dispose = 0;
 		this.transparency = false;
