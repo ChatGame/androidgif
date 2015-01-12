@@ -13,51 +13,53 @@ public class GifItem {
 	public String gifName;
 	public GifDecoder gifDecoder;
 	private Hashtable<Integer, GifView> listViews = new Hashtable<Integer, GifView>();
-	private GifView[] listViewsBuffer = null;
-
-	private static final String TAG="GIF";
+	private static final String TAG = "GIF";
 	public static GifItem getGifItem(String gifName, String imgPath) {
-		//TODO 同步陷阱
-		GifItem item = gifItemHashtable.get(gifName);;
+		// TODO 同步陷阱
+		GifItem item = gifItemHashtable.get(gifName);
+		;
 		if (item != null) {
 			return item;
 		} else {
 			synchronized (gifItemHashtable) {
-				item=gifItemHashtable.get(gifName);;
-				if(item==null){
+				item = gifItemHashtable.get(gifName);
+				;
+				if (item == null) {
 					item = new GifItem(gifName, imgPath);
 					gifItemHashtable.put(gifName, item);
 					return item;
-				}else
-				{
+				} else {
 					return item;
 				}
 			}
-			
+
 		}
 
 	}
+
 	public static GifItem getGifItem(String gifName, InputStream inputStream) {
-		//TODO 同步陷阱
-		GifItem item = gifItemHashtable.get(gifName);;
+		// TODO 同步陷阱
+		GifItem item = gifItemHashtable.get(gifName);
+		;
 		if (item != null) {
 			return item;
 		} else {
 			synchronized (gifItemHashtable) {
-				item=gifItemHashtable.get(gifName);;
-				if(item==null){
+				item = gifItemHashtable.get(gifName);
+				;
+				if (item == null) {
 					item = new GifItem(gifName, inputStream);
 					gifItemHashtable.put(gifName, item);
 					return item;
-				}else
-				{
+				} else {
 					return item;
 				}
 			}
-			
+
 		}
 
 	}
+
 	public GifItem(String gifName, String imgPath) {
 		this.gifName = gifName;
 		try {
@@ -67,12 +69,13 @@ public class GifItem {
 			e.printStackTrace();
 		}
 	}
+
 	public GifItem(String gifName, InputStream inputStream) {
-		Log.d(TAG,"start decode "+gifName);
+		Log.d(TAG, "start decode " + gifName);
 		this.gifName = gifName;
 		try {
 			gifDecoder = new GifDecoder(inputStream, gifName);
-			Log.d(TAG,"gif decode over");
+			Log.d(TAG, "gif decode over");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -81,10 +84,12 @@ public class GifItem {
 	private long lastFramePlay = 0;
 
 	public void next() {
-		if (gifDecoder.getCurrentFrame() == null) {
+		GifView[] listViewsBuffer = null;
+		GifFrame currentFrame=gifDecoder.getCurrentFrame();
+		if (currentFrame == null) {
 			return;
 		}
-		if(this.listViews.size()==0){
+		if (this.listViews.size() == 0) {
 			return;
 		}
 		boolean changed = false;
@@ -92,38 +97,48 @@ public class GifItem {
 			listViewsBuffer = listViews.values().toArray(new GifView[0]);
 		}
 		if (lastFramePlay == 0) {
-			changed=true;
+			changed = true;
 			lastFramePlay = System.currentTimeMillis();
 		} else {
-			if (System.currentTimeMillis() - lastFramePlay > gifDecoder
-					.getCurrentFrame().delay) {
+			if (System.currentTimeMillis() - lastFramePlay > currentFrame.delay) {
+
 				gifDecoder.next();
+				currentFrame=gifDecoder.getCurrentFrame();
 				lastFramePlay = System.currentTimeMillis();
 				changed = true;
 			}
 
 		}
-		if (changed) {
+		if (changed && currentFrame!=null) {
 			for (GifView view : listViewsBuffer) {
-				view.render(gifDecoder.getCurrentFrame().image);
+				view.render(currentFrame.image);
 			}
 		}
+		listViewsBuffer=null;
 
 	}
 
 	public void addView(GifView view) {
+		Log.d("GIF", "add gif view");
 		listViews.put(view.hashCode(), view);
-		//有View了，加入Thread开始跑
-		if(listViews.size()==1){
+		// 有View了，加入Thread开始跑
+		if (listViews.size() == 1) {
 			GifThread.getGifThread().addGifItem(this);
 		}
 	}
 
 	public void removeView(GifView view) {
+		Log.d("GIF", "remove gif view");
 		listViews.remove(view.hashCode());
-		//没有View了，移除
-		if(listViews.size()==0){
+		// 没有View了，移除
+		if (listViews.size() == 0) {
+			Log.d("GIF", "release gif item");
 			GifThread.getGifThread().removeGifItem(this);
+			gifItemHashtable.remove(gifName);
 		}
+	}
+
+	public void free() {
+		gifDecoder.free();
 	}
 }

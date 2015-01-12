@@ -92,6 +92,11 @@ public class GifDecoder extends Thread {
 		}
 		this.decodingFlag = false;
 		buffer=null;
+		lastColors=null;
+		colors=null;
+		act=null;
+		gct=null;
+		line=null;
 		Log.d(TAG, "Gif decode2 over " + gifName + "," + this.frameCount
 				+ " frames");
 	}
@@ -112,6 +117,7 @@ public class GifDecoder extends Thread {
 			this.in = null;
 		}
 		this.gifData = null;
+		currentFrame=null;
 	}
 
 	public int getStatus() {
@@ -264,15 +270,17 @@ public class GifDecoder extends Thread {
 	}
 
 	public GifFrame getCurrentFrame() {
-		if (this.currentFrame == null)
+		GifFrame frame=this.currentFrame;
+		if (frame == null)
 			return null;
 		if (image == null) {
 			image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
 		}
-		image.setPixels(this.currentFrame.colors, 0, width, 0, 0, width, height);
-		currentFrame.image = image;
+		image.setPixels(frame.colors, 0, width, 0, 0, width, height);
+		
+		frame.image = image;
 
-		return this.currentFrame;
+		return frame;
 	}
 
 	public GifFrame getFrame(int n) {

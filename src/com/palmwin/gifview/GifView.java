@@ -94,6 +94,7 @@ public class GifView extends View {
 	protected void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
 		gifItem.removeView(this);
+		gifItem=null;
 	}
 
 	// 设置绘制的图

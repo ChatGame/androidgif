@@ -1,19 +1,19 @@
 package com.palmwin.gifview;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Hashtable;
+
+import android.util.Log;
 
 
 public class GifThread implements Runnable {
 
 	private static GifThread instance = null;
 	private boolean running = true;
-	private static Boolean newInstance=false;
-	private List<GifItem> items = new ArrayList<GifItem>();
+	private Hashtable<String,GifItem> items = new Hashtable<String,GifItem>();
 	public static GifThread getGifThread() {
-		if (!newInstance) {
-			synchronized (newInstance) {
-				if (!newInstance) {
+		if (instance==null) {
+			synchronized (GifThread.class) {
+				if (instance==null) {
 					instance = new GifThread();
 				}
 			}
@@ -22,24 +22,21 @@ public class GifThread implements Runnable {
 	}
 
 	private GifThread() {
-		newInstance=true;
 		new Thread(this).start();
 	}
 	public void addGifItem(GifItem item) {
 		synchronized (items) {
-			items.add(item);
-		}
-		// 新元素进来，通知线程启动
-		if (items.size() == 1) {
-			synchronized (this) {
-				this.notify();
-			}
+			items.put(item.gifName, item);
 		}
 	}
 
 	public void removeGifItem(GifItem item) {
 		synchronized (items) {
-			items.remove(item);
+			GifItem gifItem=items.get(item.gifName);
+			if(gifItem!=null){
+				gifItem.free();
+			}
+			items.remove(item.gifName);
 		}
 	}
 
@@ -47,28 +44,27 @@ public class GifThread implements Runnable {
 	public void run() {
 		GifItem[] tempItems = null;
 		while (running) {
+			tempItems = null;
 			// 没有GIF在跑，暂停
 			if (items.size() == 0) {
-				synchronized (this) {
-					try {
-						this.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
+				sleep(100);
 			}
 			synchronized (items) {
-				tempItems = items.toArray(new GifItem[0]);
+				tempItems = items.values().toArray(new GifItem[0]);
 			}
 			// 尝试下一帧
 			for (GifItem item : tempItems) {
 				item.next();
 			}
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			sleep(10);
+		}
+	}
+	private void sleep(long time){
+		try {
+			Thread.sleep(time);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
