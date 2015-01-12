@@ -90,7 +90,10 @@ public class GifView extends View {
 	@Override
 	protected void onAttachedToWindow() {
 		super.onAttachedToWindow();
-		this.setGif(imgPath, gifName, showWidth, showHeight);
+		if(imgPath!=null)
+		{
+			this.setGif(imgPath, gifName, showWidth, showHeight);
+		}
 
 	}
 
