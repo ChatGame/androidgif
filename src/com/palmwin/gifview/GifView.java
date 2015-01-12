@@ -20,6 +20,8 @@ public class GifView extends View {
 	private Rect rect = null;
 	private GifItem gifItem = null;
 	private Handler handler = new Handler();
+	private String imgPath;
+	private String gifName;
 	public GifView(Context context) {
 		super(context);
 	}
@@ -32,6 +34,8 @@ public class GifView extends View {
 		this.showWidth = width;
 		gifItem = GifItem.getGifItem(gifName, imgPath);
 		gifItem.addView(this);
+		this.gifName=gifName;
+		this.imgPath=imgPath;
 		rect = new Rect(0, 0, width, height);
 	}
 	public void setGif(InputStream inputStream, String gifName, int width, int height) {
@@ -86,7 +90,7 @@ public class GifView extends View {
 	@Override
 	protected void onAttachedToWindow() {
 		super.onAttachedToWindow();
-		gifItem.addView(this);
+		this.setGif(imgPath, gifName, showWidth, showHeight);
 
 	}
 

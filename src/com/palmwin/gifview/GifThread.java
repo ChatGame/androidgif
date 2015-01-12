@@ -32,10 +32,6 @@ public class GifThread implements Runnable {
 
 	public void removeGifItem(GifItem item) {
 		synchronized (items) {
-			GifItem gifItem=items.get(item.gifName);
-			if(gifItem!=null){
-				gifItem.free();
-			}
 			items.remove(item.gifName);
 		}
 	}

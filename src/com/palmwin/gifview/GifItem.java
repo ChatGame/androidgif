@@ -23,7 +23,6 @@ public class GifItem {
 		} else {
 			synchronized (gifItemHashtable) {
 				item = gifItemHashtable.get(gifName);
-				;
 				if (item == null) {
 					item = new GifItem(gifName, imgPath);
 					gifItemHashtable.put(gifName, item);
@@ -46,7 +45,6 @@ public class GifItem {
 		} else {
 			synchronized (gifItemHashtable) {
 				item = gifItemHashtable.get(gifName);
-				;
 				if (item == null) {
 					item = new GifItem(gifName, inputStream);
 					gifItemHashtable.put(gifName, item);
@@ -75,7 +73,6 @@ public class GifItem {
 		this.gifName = gifName;
 		try {
 			gifDecoder = new GifDecoder(inputStream, gifName);
-			Log.d(TAG, "gif decode over");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -135,10 +132,11 @@ public class GifItem {
 			Log.d("GIF", "release gif item");
 			GifThread.getGifThread().removeGifItem(this);
 			gifItemHashtable.remove(gifName);
+			if(gifDecoder!=null){
+				gifDecoder.free();
+			}
 		}
 	}
 
-	public void free() {
-		gifDecoder.free();
-	}
+	
 }
