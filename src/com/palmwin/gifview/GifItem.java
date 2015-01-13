@@ -14,6 +14,7 @@ public class GifItem {
 	public GifDecoder gifDecoder;
 	private Hashtable<Integer, GifView> listViews = new Hashtable<Integer, GifView>();
 	private static final String TAG = "GIF";
+	private long lastShowTime=0;
 	public static GifItem getGifItem(String gifName, String imgPath) {
 		// TODO 同步陷阱
 		GifItem item = gifItemHashtable.get(gifName);
@@ -87,6 +88,9 @@ public class GifItem {
 			return;
 		}
 		if (this.listViews.size() == 0) {
+			if(System.currentTimeMillis()-lastShowTime>5000){
+				free();
+			}
 			return;
 		}
 		boolean changed = false;
@@ -105,6 +109,9 @@ public class GifItem {
 				changed = true;
 			}
 
+		}
+		if(listViewsBuffer.length>0){
+			lastShowTime=System.currentTimeMillis();
 		}
 		if (changed && currentFrame!=null) {
 			for (GifView view : listViewsBuffer) {
@@ -130,11 +137,14 @@ public class GifItem {
 		// 没有View了，移除
 		if (listViews.size() == 0) {
 			Log.d("GIF", "release gif item");
-			GifThread.getGifThread().removeGifItem(this);
-			gifItemHashtable.remove(gifName);
-			if(gifDecoder!=null){
-				gifDecoder.free();
-			}
+			free();
+		}
+	}
+	private void free(){
+		GifThread.getGifThread().removeGifItem(this);
+		gifItemHashtable.remove(gifName);
+		if(gifDecoder!=null){
+			gifDecoder.free();
 		}
 	}
 
