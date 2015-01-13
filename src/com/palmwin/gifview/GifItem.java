@@ -89,6 +89,7 @@ public class GifItem {
 		}
 		if (this.listViews.size() == 0) {
 			if(System.currentTimeMillis()-lastShowTime>5000){
+				Log.d(TAG, "free gif item "+gifName);
 				free();
 			}
 			return;
@@ -134,11 +135,6 @@ public class GifItem {
 	public void removeView(GifView view) {
 		Log.d("GIF", "remove gif view");
 		listViews.remove(view.hashCode());
-		// 没有View了，移除
-		if (listViews.size() == 0) {
-			Log.d("GIF", "release gif item");
-			free();
-		}
 	}
 	private void free(){
 		GifThread.getGifThread().removeGifItem(this);

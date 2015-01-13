@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.Hashtable;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.util.Log;
 
 public class GifDecoder extends Thread {
@@ -278,13 +280,16 @@ public class GifDecoder extends Thread {
 		GifFrame frame = this.currentFrame;
 		if (frame == null)
 			return null;
-		if (image == null) {
-			image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
-		}
-		image.setPixels(frame.colors, 0, width, 0, 0, width, height);
-
-		frame.image = image;
-
+//		if (image == null) {
+//			image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
+//		}
+//		int[] colors=frame.colors;
+//		if(colors!=null)
+//		{
+//			image.setPixels(colors, 0, width, 0, 0, width, height);
+//		}
+		int[] colors=frame.colors;
+		frame.image = Bitmap.createBitmap(colors,width, height, Bitmap.Config.ARGB_4444);;
 		return frame;
 	}
 
