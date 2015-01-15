@@ -278,18 +278,13 @@ public class GifDecoder extends Thread {
 
 	public GifFrame getCurrentFrame() {
 		GifFrame frame = this.currentFrame;
-		if (frame == null)
+		if (frame == null) {
 			return null;
-//		if (image == null) {
-//			image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
-//		}
-//		int[] colors=frame.colors;
-//		if(colors!=null)
-//		{
-//			image.setPixels(colors, 0, width, 0, 0, width, height);
-//		}
-		int[] colors=frame.colors;
-		frame.image = Bitmap.createBitmap(colors,width, height, Bitmap.Config.ARGB_4444);;
+		}
+		if (frame.image == null) {
+			frame.image = Bitmap.createBitmap(frame.colors, width, height,
+					Bitmap.Config.ARGB_4444);
+		}
 		return frame;
 	}
 

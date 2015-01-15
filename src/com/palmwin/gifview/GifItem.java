@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 
 import android.util.Log;
 
@@ -12,9 +14,10 @@ public class GifItem {
 	private static Hashtable<String, GifItem> gifItemHashtable = new Hashtable<String, GifItem>();
 	public String gifName;
 	public GifDecoder gifDecoder;
-	private Hashtable<Integer, GifView> listViews = new Hashtable<Integer, GifView>();
+	private Hashtable<Integer, AbstractGifView> listViews = new Hashtable<Integer, AbstractGifView>();
 	private static final String TAG = "GIF";
-	private long lastShowTime=0;
+	private long lastShowTime = 0;
+
 	public static GifItem getGifItem(String gifName, String imgPath) {
 		// TODO 同步陷阱
 		GifItem item = gifItemHashtable.get(gifName);
@@ -80,50 +83,48 @@ public class GifItem {
 	}
 
 	private long lastFramePlay = 0;
+	List<AbstractGifView> listViewsBuffer = new ArrayList<AbstractGifView>();
 
 	public void next() {
-		GifView[] listViewsBuffer = null;
-		GifFrame currentFrame=gifDecoder.getCurrentFrame();
+		GifFrame currentFrame = gifDecoder.getCurrentFrame();
 		if (currentFrame == null) {
 			return;
 		}
 		if (this.listViews.size() == 0) {
-			if(System.currentTimeMillis()-lastShowTime>5000){
-				Log.d(TAG, "free gif item "+gifName);
+			if (System.currentTimeMillis() - lastShowTime > 5000) {
 				free();
 			}
 			return;
 		}
 		boolean changed = false;
-		synchronized (listViews) {
-			listViewsBuffer = listViews.values().toArray(new GifView[0]);
-		}
 		if (lastFramePlay == 0) {
 			changed = true;
 			lastFramePlay = System.currentTimeMillis();
 		} else {
 			if (System.currentTimeMillis() - lastFramePlay > currentFrame.delay) {
-
 				gifDecoder.next();
-				currentFrame=gifDecoder.getCurrentFrame();
+				currentFrame = gifDecoder.getCurrentFrame();
 				lastFramePlay = System.currentTimeMillis();
 				changed = true;
 			}
 
 		}
-		if(listViewsBuffer.length>0){
-			lastShowTime=System.currentTimeMillis();
-		}
-		if (changed && currentFrame!=null) {
-			for (GifView view : listViewsBuffer) {
-				view.render(currentFrame.image);
+		if (changed) {
+			listViewsBuffer.addAll(listViews.values());
+			if (listViewsBuffer.size() > 0) {
+				lastShowTime = System.currentTimeMillis();
 			}
+			if (changed && currentFrame != null) {
+				for (AbstractGifView view : listViewsBuffer) {
+					view.render(currentFrame.image);
+				}
+			}
+			listViewsBuffer.clear();
 		}
-		listViewsBuffer=null;
 
 	}
 
-	public void addView(GifView view) {
+	public void addView(AbstractGifView view) {
 		Log.d("GIF", "add gif view");
 		listViews.put(view.hashCode(), view);
 		// 有View了，加入Thread开始跑
@@ -132,17 +133,17 @@ public class GifItem {
 		}
 	}
 
-	public void removeView(GifView view) {
+	public void removeView(AbstractGifView view) {
 		Log.d("GIF", "remove gif view");
 		listViews.remove(view.hashCode());
 	}
-	private void free(){
+
+	private void free() {
 		GifThread.getGifThread().removeGifItem(this);
 		gifItemHashtable.remove(gifName);
-		if(gifDecoder!=null){
+		if (gifDecoder != null) {
 			gifDecoder.free();
 		}
 	}
 
-	
 }

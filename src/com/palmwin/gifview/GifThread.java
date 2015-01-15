@@ -1,19 +1,19 @@
 package com.palmwin.gifview;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
-
-import android.util.Log;
-
+import java.util.List;
 
 public class GifThread implements Runnable {
 
 	private static GifThread instance = null;
 	private boolean running = true;
-	private Hashtable<String,GifItem> items = new Hashtable<String,GifItem>();
+	private Hashtable<String, GifItem> items = new Hashtable<String, GifItem>();
+
 	public static GifThread getGifThread() {
-		if (instance==null) {
+		if (instance == null) {
 			synchronized (GifThread.class) {
-				if (instance==null) {
+				if (instance == null) {
 					instance = new GifThread();
 				}
 			}
@@ -24,6 +24,7 @@ public class GifThread implements Runnable {
 	private GifThread() {
 		new Thread(this).start();
 	}
+
 	public void addGifItem(GifItem item) {
 		synchronized (items) {
 			items.put(item.gifName, item);
@@ -36,26 +37,31 @@ public class GifThread implements Runnable {
 		}
 	}
 
+	List<GifItem> tempItems = new ArrayList<GifItem>();
+
 	@Override
 	public void run() {
-		GifItem[] tempItems = null;
 		while (running) {
-			tempItems = null;
 			// 没有GIF在跑，暂停
 			if (items.size() == 0) {
 				sleep(100);
 			}
-			synchronized (items) {
-				tempItems = items.values().toArray(new GifItem[0]);
-			}
+			tempItems.addAll(items.values());
 			// 尝试下一帧
+			long start = System.currentTimeMillis();
 			for (GifItem item : tempItems) {
 				item.next();
 			}
-			sleep(10);
+			long sleep = 20 - System.currentTimeMillis() - start;
+			if (sleep < 0) {
+				sleep = 10;
+			}
+			sleep(sleep);
+			tempItems.clear();
 		}
 	}
-	private void sleep(long time){
+
+	private void sleep(long time) {
 		try {
 			Thread.sleep(time);
 		} catch (InterruptedException e) {
