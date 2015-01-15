@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.PersistableBundle;
@@ -29,6 +30,8 @@ public class MainActivity extends Activity {
 					.findViewById(id);
 			circleView.setDefaultBitmap(R.drawable.th);
 			try {
+				circleView.setBorderColor(Color.GREEN);
+				circleView.setBorderSize(6);
 				circleView.setGif(this.getAssets().open("a"+index+".gif"), "test"+index);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

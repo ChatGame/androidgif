@@ -62,9 +62,8 @@ public class GifCircleView extends AbstractGifView {
 
 	}
 	
-	@Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		super.onSizeChanged(w, h, oldw, oldh);
 		resetPaint();
 	}
 
@@ -74,6 +73,7 @@ public class GifCircleView extends AbstractGifView {
 		}
 		int r=Math.min(canvas.getWidth()/2, canvas.getHeight()/2);
 		canvas.drawCircle(r, r, r, mBitmapPaint);
+		canvas.drawCircle(r, r, r-mBorderWidth/2, mBorderPaint);
 	}
 
 }

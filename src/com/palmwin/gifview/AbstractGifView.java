@@ -5,11 +5,10 @@ import java.io.InputStream;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 public abstract class AbstractGifView extends View {
@@ -21,9 +20,37 @@ public abstract class AbstractGifView extends View {
 	private String imgPath;
 	private String gifName;
 	private boolean running = true;
+	final Paint mBorderPaint = new Paint();
+
+	int mBorderColor = Color.BLACK;
+	int mBorderWidth = 0;
 
 	public AbstractGifView(Context context) {
 		super(context);
+	}
+
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		super.onSizeChanged(w, h, oldw, oldh);
+		setup();
+	}
+
+	private void setup() {
+		mBorderPaint.setStyle(Paint.Style.STROKE);
+		mBorderPaint.setAntiAlias(true);
+		mBorderPaint.setColor(mBorderColor);
+		mBorderPaint.setStrokeWidth(mBorderWidth);
+	}
+
+	public void setBorderColor(int color) {
+		this.mBorderColor = color;
+		setup();
+		invalidate();
+	}
+
+	public void setBorderSize(int size) {
+		this.mBorderWidth = size;
+		invalidate();
 	}
 
 	public void setGif(String imgPath, String gifName) {
@@ -51,9 +78,6 @@ public abstract class AbstractGifView extends View {
 	public AbstractGifView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
-
-
-	
 
 	@Override
 	protected void onAttachedToWindow() {
@@ -84,13 +108,16 @@ public abstract class AbstractGifView extends View {
 			gifItem = null;
 		}
 	}
-	public void setDefaultBitmap(Bitmap bitmap){
-		this.bitmap=bitmap;
+
+	public void setDefaultBitmap(Bitmap bitmap) {
+		this.bitmap = bitmap;
 		this.invalidate();
 	}
-	public void setDefaultBitmap(int res){
+
+	public void setDefaultBitmap(int res) {
 		setDefaultBitmap(BitmapFactory.decodeResource(this.getResources(), res));
 	}
+
 	// 设置绘制的图
 	public void render(Bitmap image) {
 		this.bitmap = image;

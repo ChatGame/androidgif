@@ -7,25 +7,31 @@
     <com.palmwin.gifview.GifCircleView
         android:id="@+id/gifCircleView1"
         android:layout_width="80dp"
-        android:layout_height="80dp" />
+        android:layout_height="80dp"
+        android:layout_margin="5dp" />
     <com.palmwin.gifview.GifCircleView
         android:id="@+id/gifCircleView2"
         android:layout_width="80dp"
-        android:layout_height="80dp" />
+        android:layout_height="80dp"
+        android:layout_margin="5dp" />
     <com.palmwin.gifview.GifCircleView
         android:id="@+id/gifCircleView3"
         android:layout_width="80dp"
-        android:layout_height="80dp" />
+        android:layout_height="80dp"
+        android:layout_margin="5dp" />
     <com.palmwin.gifview.GifCircleView
         android:id="@+id/gifCircleView4"
         android:layout_width="80dp"
-        android:layout_height="80dp" />
+        android:layout_height="80dp"
+        android:layout_margin="5dp" />
     <com.palmwin.gifview.GifCircleView
         android:id="@+id/gifCircleView5"
         android:layout_width="80dp"
-        android:layout_height="80dp" />
+        android:layout_height="80dp"
+        android:layout_margin="5dp" />
     <com.palmwin.gifview.GifCircleView
         android:id="@+id/gifCircleView6"
         android:layout_width="80dp"
-        android:layout_height="80dp" />
+        android:layout_height="80dp"
+        android:layout_margin="5dp" />
 </LinearLayout>
