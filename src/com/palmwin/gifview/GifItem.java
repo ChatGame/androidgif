@@ -65,8 +65,12 @@ public class GifItem {
 	public GifItem(String gifName, String imgPath) {
 		this.gifName = gifName;
 		try {
+			String fileName=gifName.toLowerCase();
+			if(!gifName.endsWith(".gif")){
+				fileName+=".gif";
+			}
 			gifDecoder = new GifDecoder(new FileInputStream(new File(imgPath,
-					gifName + ".gif")), gifName);
+					fileName)), gifName);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -86,6 +90,9 @@ public class GifItem {
 	List<AbstractGifView> listViewsBuffer = new ArrayList<AbstractGifView>();
 
 	public void next() {
+		if(gifDecoder==null){
+			return;
+		}
 		GifFrame currentFrame = gifDecoder.getCurrentFrame();
 		if (currentFrame == null) {
 			return;

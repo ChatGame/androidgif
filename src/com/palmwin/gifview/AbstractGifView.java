@@ -91,11 +91,17 @@ public abstract class AbstractGifView extends View {
 	}
 
 	public void pause() {
+		if(gifItem==null){
+			return;
+		}
 		running = false;
 		gifItem.removeView(this);
 	}
 
 	public void resume() {
+		if(gifItem==null){
+			return;
+		}
 		running = true;
 		gifItem.addView(this);
 	}
