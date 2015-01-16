@@ -3,7 +3,7 @@
 
 ## Use GifView
 
-gifView.setGif(path);
+gifView.setGif(filePath,fileName);
 
 gifView.setGif(inputStream,name);
 Name is unique, same name means same gif
