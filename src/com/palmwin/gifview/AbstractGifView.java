@@ -1,5 +1,8 @@
 package com.palmwin.gifview;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import android.content.Context;
@@ -9,131 +12,124 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 public abstract class AbstractGifView extends View {
 
-	private static final String TAG = "GIF";
-	Bitmap bitmap;
-	private GifItem gifItem = null;
-	private Handler handler = new Handler();
-	private String imgPath;
-	private String gifName;
-	private boolean running = true;
-	final Paint mBorderPaint = new Paint();
+    private static final String TAG = "GIF";
+    Bitmap bitmap;
+    private GifFile gifFile;
+    private int currentFrame = 0;
+    final Paint mBorderPaint = new Paint();
+    boolean playing=false;
+    int mBorderColor = Color.BLACK;
+    int mBorderWidth = 0;
 
-	int mBorderColor = Color.BLACK;
-	int mBorderWidth = 0;
+    public AbstractGifView(Context context) {
+        super(context);
+    }
 
-	public AbstractGifView(Context context) {
-		super(context);
-	}
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        setup();
+    }
 
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		super.onSizeChanged(w, h, oldw, oldh);
-		setup();
-	}
+    private void setup() {
+        mBorderPaint.setStyle(Paint.Style.STROKE);
+        mBorderPaint.setAntiAlias(true);
+        mBorderPaint.setColor(mBorderColor);
+        mBorderPaint.setStrokeWidth(mBorderWidth);
+    }
 
-	private void setup() {
-		mBorderPaint.setStyle(Paint.Style.STROKE);
-		mBorderPaint.setAntiAlias(true);
-		mBorderPaint.setColor(mBorderColor);
-		mBorderPaint.setStrokeWidth(mBorderWidth);
-	}
+    public void setBorderColor(int color) {
+        this.mBorderColor = color;
+        setup();
+        invalidate();
+    }
 
-	public void setBorderColor(int color) {
-		this.mBorderColor = color;
-		setup();
-		invalidate();
-	}
+    public void setBorderSize(int size) {
+        this.mBorderWidth = size;
+        invalidate();
+    }
 
-	public void setBorderSize(int size) {
-		this.mBorderWidth = size;
-		invalidate();
-	}
+    public void setGif(String imgPath, String gifName) {
+        Log.d(TAG, "set gif "+gifName);
+        try {
+            setGif(new FileInputStream(new File(imgPath,gifName+".gif")), gifName);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
-	public void setGif(String imgPath, String gifName) {
-		if (gifItem != null) {
-			gifItem.removeView(this);
-		}
-		gifItem = GifItem.getGifItem(gifName, imgPath);
-		this.resume();
-		this.gifName = gifName;
-		this.imgPath = imgPath;
-	}
+    public void setGif(InputStream inputStream, String gifName) {
+        gifFile = GifFile.getGifFile(gifName, inputStream, false);
+        startPlay();
+    }
 
-	public void setGif(InputStream inputStream, String gifName) {
-		if (gifItem != null) {
-			gifItem.removeView(this);
-		}
-		gifItem = GifItem.getGifItem(gifName, inputStream);
-		this.resume();
-	}
+    private void startPlay() {
+        if(playing){
+            return;
+        }
+        playing=true;
+        final Handler handler = new Handler();
+        handler.post(new Runnable() {
 
-	public AbstractGifView(Context context, AttributeSet attrs) {
-		this(context, attrs, 0);
-	}
+            @Override
+            public void run() {
+                if (AbstractGifView.this.hasWindowFocus()
+                        && AbstractGifView.this.getVisibility() == View.VISIBLE
+                        && AbstractGifView.this.isShown()) {
+                    int delay = 100;
+                    GifFrame frame = gifFile.getFrame(currentFrame);
+                    GifFrame nextFrame = gifFile.getFrame(currentFrame + 1);
+                    if (frame != null) {
+                        drawFrame(frame);
+                        currentFrame++;
+                        delay = nextFrame.delay;
+                    }
+                    handler.postDelayed(this, delay);
+                }else{
+                    Log.d(TAG, "gif stop "+gifFile.getFileName());
+                    playing=false;
+                }
+            }
+        });
+    }
 
-	public AbstractGifView(Context context, AttributeSet attrs, int defStyle) {
-		super(context, attrs, defStyle);
-	}
+    private void drawFrame(GifFrame frame) {
+        this.bitmap = frame.image;
+        this.invalidate();
+    }
 
-	@Override
-	protected void onAttachedToWindow() {
-		super.onAttachedToWindow();
-		if (running) {
-			if (imgPath != null) {
-				this.setGif(imgPath, gifName);
-			}
-		}
+    public AbstractGifView(Context context, AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
 
-	}
+    public AbstractGifView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+    }
 
-	public void pause() {
-		if(gifItem==null){
-			return;
-		}
-		running = false;
-		gifItem.removeView(this);
-	}
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        startPlay();
+    }
 
-	public void resume() {
-		if(gifItem==null){
-			return;
-		}
-		running = true;
-		gifItem.addView(this);
-	}
 
-	@Override
-	protected void onDetachedFromWindow() {
-		super.onDetachedFromWindow();
-		if (running) {
-			gifItem.removeView(this);
-			gifItem = null;
-		}
-	}
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+    }
 
-	public void setDefaultBitmap(Bitmap bitmap) {
-		this.bitmap = bitmap;
-		this.invalidate();
-	}
+    public void setDefaultBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+        this.invalidate();
+    }
 
-	public void setDefaultBitmap(int res) {
-		setDefaultBitmap(BitmapFactory.decodeResource(this.getResources(), res));
-	}
-
-	// 设置绘制的图
-	public void render(Bitmap image) {
-		this.bitmap = image;
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				AbstractGifView.this.invalidate();
-			}
-		});
-
-	}
+    public void setDefaultBitmap(int res) {
+        setDefaultBitmap(BitmapFactory.decodeResource(this.getResources(), res));
+    }
 
 }

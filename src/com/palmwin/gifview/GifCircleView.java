@@ -9,11 +9,11 @@ import android.graphics.Paint;
 import android.graphics.Shader;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 
 public class GifCircleView extends AbstractGifView {
 	private BitmapShader mBitmapShader;
 	private final Paint mBitmapPaint = new Paint();
-	private Handler handler = new Handler();
 	Matrix matrix=new Matrix();
 	public GifCircleView(Context context) {
 		super(context);
@@ -25,20 +25,6 @@ public class GifCircleView extends AbstractGifView {
 
 	public GifCircleView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-	}
-
-	@Override
-	public void render(Bitmap image) {
-		this.bitmap = image;
-		resetPaint();
-		handler.post(new Runnable() {
-			@Override
-			public void run() {
-				GifCircleView.this.invalidate();
-			}
-		});
-	
-		
 	}
 
 	@Override
@@ -71,9 +57,9 @@ public class GifCircleView extends AbstractGifView {
 		if(bitmap==null){
 			return;
 		}
+		resetPaint();
 		int r=Math.min(canvas.getWidth()/2, canvas.getHeight()/2);
 		canvas.drawCircle(r, r, r, mBitmapPaint);
-		canvas.drawCircle(r, r, r-mBorderWidth/2, mBorderPaint);
 	}
 
 }

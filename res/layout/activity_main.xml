@@ -29,9 +29,14 @@
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_margin="5dp" />
-    <com.palmwin.gifview.GifCircleView
+    <com.palmwin.gifview.GifView
         android:id="@+id/gifCircleView6"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_margin="5dp" />
+    <TextView
+        android:id="@+id/txtFace"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="30dp" />
 </LinearLayout>
